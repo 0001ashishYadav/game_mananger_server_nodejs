@@ -1,10 +1,11 @@
-import dotenv from "dotenv";
-dotenv.config({ path: "./example.env" });
+import "dotenv/config";
 
 import express from "express";
 import { errorHandler } from "./error.mjs";
 import userRouter from "./users/router.mjs";
 const app = express();
+
+const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 
@@ -16,9 +17,9 @@ app.all(/^.*$/, (req, res) => {
 
 app.use(errorHandler);
 
-app.listen(process.env.PORT, (err) => {
+app.listen(PORT, (err) => {
   if (err) {
     console.log(err);
   }
-  console.log(`Server started on port ${process.env.PORT}`);
+  console.log(`Server started on port ${PORT}`);
 });

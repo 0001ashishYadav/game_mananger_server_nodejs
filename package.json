@@ -2,9 +2,10 @@
   "name": "mainserver",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.mjs",
+    "dev": "nodemon index.mjs"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +13,11 @@
   "type": "commonjs",
   "dependencies": {
     "dotenv": "^17.2.1",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^7.0.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }

@@ -3,6 +3,8 @@ const signup = (req, res, next) => {
   // TODO: hash password
   // TODO: write user in DB
   // TODO: send account verification email
+  console.log(req.body);
+
   res.json({ msg: "signup is successful" });
 };
 
