@@ -6,6 +6,8 @@ import { errorHandler } from "./error.mjs";
 import userRouter from "./users/router.mjs";
 const app = express();
 
+app.use(express.json());
+
 app.use("/users", userRouter);
 
 app.all(/^.*$/, (req, res) => {
