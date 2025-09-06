@@ -1,8 +1,12 @@
-const signup = (req, res, next) => {
-  // TODO: sanitation
-  // TODO: hash password
-  // TODO: write user in DB
-  // TODO: send account verification email
+const signup = async (req, res, next) => {
+  const result = await UserSignupModel.safeParseAsync(req.body);
+  if (!result.success) {
+    throw new ServerError(400, errorPritify(result));
+  }
+
+  // TODO: hash password -> bcrypt
+  // TODO: write user in DB -> Prisma
+  // TODO: send account verification email -> nodemailer
   console.log(req.body);
 
   res.json({ msg: "signup is successful" });
