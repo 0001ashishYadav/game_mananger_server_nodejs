@@ -1,11 +1,25 @@
+import bcrypt from "bcrypt";
+import prisma from "../prisma/db.mjs";
+import { ServerError } from "../error.mjs";
+import { UserSignupModel } from "./validation .mjs";
+
 const signup = async (req, res, next) => {
   const result = await UserSignupModel.safeParseAsync(req.body);
   if (!result.success) {
     throw new ServerError(400, errorPritify(result));
   }
 
-  // TODO: hash password -> bcrypt
-  // TODO: write user in DB -> Prisma
+  const hasedPassword = await bcrypt.hash(req.body.password, 10);
+
+  const newUser = await prisma.user.create({
+    data: {
+      email: req.body.email,
+      name: req.body.name,
+      password: hasedPassword,
+    },
+  });
+  console.log(newUser);
+
   // TODO: send account verification email -> nodemailer
   console.log(req.body);
 
