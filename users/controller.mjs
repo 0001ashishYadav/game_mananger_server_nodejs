@@ -4,6 +4,7 @@ import { ServerError } from "../error.mjs";
 import { UserLoginModel, UserSignupModel } from "./validation .mjs";
 import sendEmail from "./email.mjs";
 import emailQueue from "../queue/email.queue.mjs";
+import { asyncJwtSign } from "../async.jwt.mjs";
 
 const signup = async (req, res, next) => {
   const result = await UserSignupModel.safeParseAsync(req.body);
@@ -40,13 +41,31 @@ const signup = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
+  const result = await UserLoginModel.safeParseAsync(req.body);
+  if (!result.success) {
+    throw new ServerError(400, errorPritify(result));
+  }
+
   // TODO: find user by email from DB
 
-  // TODO: check is account verified
-  // TODO: match hased password
-  // TODO: Generate JWT Token
+  const user = await prisma.user.findUnique({
+    where: {
+      email: req.body.email,
+    },
+  });
 
-  res.json({ msg: "login done" });
+  console.log(user);
+
+  if (!(await bcrypt.compare(req.body.password, user.password))) {
+    throw new ServerError(401, "password mismatch");
+  }
+
+  const token = await asyncJwtSign(
+    { id: user.id, name: user.name, email: user.email },
+    process.env.TOKEN_SECRET
+  );
+
+  res.json({ msg: "login successful", token });
 };
 
 const forgotPassword = (req, res, next) => {
