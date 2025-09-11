@@ -93,4 +93,11 @@ const resetPassword = (req, res, next) => {
   res.json({ msg: "reset password successul" });
 };
 
-export { signup, login, forgotPassword, resetPassword };
+const getMe = async (req, res, next) => {
+  // 1. Extract user from request
+  // 2. find user in DB by ID or Email
+  // 3. Send user details without password
+  res.json({ msg: "This is me" });
+};
+
+export { signup, login, forgotPassword, resetPassword, getMe };
