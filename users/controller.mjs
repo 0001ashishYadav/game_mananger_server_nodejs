@@ -14,20 +14,51 @@ const signup = async (req, res, next) => {
 
   const hasedPassword = await bcrypt.hash(req.body.password, 10);
 
+  // const newUser = await prisma.user.create({
+  //   data: {
+  //     email: req.body.email,
+  //     name: req.body.name,
+  //     password: hasedPassword,
+  //   },
+  // });
+  // console.log(newUser);
+
+  // 2. generate a 32 keyword random string
+
+  const randomStrGen = (length = 32) => {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const randomString = randomStrGen();
+
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes later
+
+  // 3. update this string in DB with future 15min expiry time
+
+  // await prisma.user.create({
+  //   data: {
+  //     resetToken: randomString,
+  //     tokenExpiry: expiresAt,
+  //   },
+  // });
+
   const newUser = await prisma.user.create({
     data: {
       email: req.body.email,
       name: req.body.name,
       password: hasedPassword,
+      resetToken: randomString,
+      tokenExpiry: expiresAt,
     },
   });
   console.log(newUser);
 
-  // 1. Add 2 columns in User table in DB.
-  // 1.1 Add resetToken(string), resetTokenExpiry(timestampz) in User prisma model
-  // 1.2 Run migration to acctually add column
-  // 2. generate a 32 keyword random string
-  // 3. update this string in DB with future 15min expiry time
   // 4. make link example https://localhost:5000/resetPassword/fgvjkdsuhvgyahfvajdsfahvdsjvbd
   // 5. add this above link email replacing http://google.com
 
