@@ -3,6 +3,7 @@ import "dotenv/config";
 import express from "express";
 import { errorHandler } from "./error.mjs";
 import userRouter from "./users/router.mjs";
+import gameRouter from "./game/router.mjs";
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -10,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 
 app.use("/users", userRouter);
+app.use("/games", gameRouter);
 
 app.all(/^.*$/, (req, res) => {
   res.status(400).json({ msg: "route dosen't exists" });
