@@ -62,6 +62,14 @@ const login = async (req, res, next) => {
 
   console.log(user);
 
+  if (!user) {
+    throw new ServerError(404, "user is not found");
+  }
+
+  if (!user.accountVerified) {
+    throw new ServerError(404, "verify you account first");
+  }
+
   if (!(await bcrypt.compare(req.body.password, user.password))) {
     throw new ServerError(401, "password mismatch");
   }
