@@ -12,8 +12,8 @@ import { authentication } from "../auth.mjs";
 userRouter
   .post("/signup", signup)
   .post("/login", login)
-  .post("/forgot-password", forgotPassword)
-  .post("/reset-password", resetPassword)
+  .patch("/forgotPassword", forgotPassword)
+  .patch("/resetPassword", resetPassword)
   .get("/profile", authentication, getMe);
 
 export default userRouter;
