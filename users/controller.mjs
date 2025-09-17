@@ -105,7 +105,8 @@ const login = async (req, res, next) => {
 
   const token = await asyncJwtSign(
     { id: user.id, name: user.name, email: user.email },
-    process.env.TOKEN_SECRET
+    process.env.TOKEN_SECRET,
+    { expiresIn: process.env.TOKEN_EXPIRY_TIME }
   );
 
   res.json({ msg: "login successful", token });
@@ -237,7 +238,7 @@ const getMe = async (req, res, next) => {
   // 1. Extract user from request
   // 2. find user in DB by ID or Email
   // 3. Send user details without password
-  res.json({ msg: "This is me" });
+  res.json({ msg: "This is me", me: req.user });
 };
 
 const updateProfileImage = async (req, res, next) => {
