@@ -113,11 +113,11 @@ const login = async (req, res, next) => {
 
 const forgotPassword = async (req, res, next) => {
   // 1. find User via email from req.body
-  const user = await prisma.user.findUnique({
-    where: {
-      email: req.body.email,
-    },
-  });
+  // const user = await prisma.user.findUnique({
+  //   where: {
+  //     email: req.body.email,
+  //   },
+  // });
 
   if (!user) {
     throw new ServerError(404, "user is not found");
@@ -137,7 +137,7 @@ const forgotPassword = async (req, res, next) => {
 
   // 3. update this string in DB with future 15min expiry time
 
-  await prisma.user.update({
+  await prisma.user.updateManyAndReturn({
     where: {
       email: req.body.email,
     },
@@ -147,22 +147,25 @@ const forgotPassword = async (req, res, next) => {
     },
   });
 
+  if (userArr.length === 0) {
+    throw new ServerError(404, "User not found, please signup first");
+  }
+
+  const user = userArr[0];
+
   // 4. make link example http://localhost:5000/resetPassword/fgvjkdsuhvgyahfvajdsfahvdsjvbd
 
-  const resetLink = `http://localhost:5000/resetPassword/${randomString}`;
+  const link = `${req.protocol}://${process.env.FRONTEND_URL}/${randomStr}`;
 
-  // 5. send this link via email
-
-  await emailQueue.add("send_verification_email", {
-    to: req.body.email,
-    subject: "Reset Password",
+  await emailQueue.add("forgot_pass", {
+    to: user.email,
+    subject: "Forgot Password",
     body: `<html>
-    <h1>Reset Password</h1>
-    <a href=${resetLink}>Click here</a>
+      <h1>Hi, ${user.name}</h1>
+      <a href=${link}>Click Here to reset password</a>
     </html>`,
   });
-
-  res.json({ msg: "forgot password" });
+  res.json({ msg: "Email sent" });
 };
 
 const resetPassword = async (req, res, next) => {
@@ -197,6 +200,9 @@ const resetPassword = async (req, res, next) => {
   // 4. check if is accountVerified
 
   if (user.accountVerified && !req.body.password) {
+    if (req.body.password.length < 6) {
+      throw new ServerError(401, "password should not be less than 6");
+    }
     throw new ServerError(401, "password must be supplied");
   }
 
