@@ -1,4 +1,6 @@
 import express from "express";
+import { authentication } from "../auth.mjs";
+import { singleImageUploadMiddleware } from "../storege/config.mjs";
 const userRouter = express.Router();
 import {
   forgotPassword,
@@ -8,7 +10,6 @@ import {
   signup,
   updateProfileImage,
 } from "./controller.mjs";
-import { authentication } from "../auth.mjs";
 
 userRouter
   .post("/signup", signup)
@@ -17,7 +18,7 @@ userRouter
   .patch("/resetPassword", resetPassword)
   .get("/profile", authentication, getMe)
   .patch(
-    "profile/image",
+    "/profile/image",
     authentication,
     singleImageUploadMiddleware("image"),
     updateProfileImage
