@@ -168,12 +168,16 @@ const forgotPassword = async (req, res, next) => {
 const resetPassword = async (req, res, next) => {
   // 1. Extract token from req.body
 
+  if (!req.body || !req.body.token) {
+    throw new ServerError(401, "Invalid link or token");
+  }
+
   console.log(req.body.token);
   // 2. find User via token from DB
 
-  if (!req.body.token || !req.body.password) {
-    throw new ServerError(400, "token and password is required");
-  }
+  // if (!req.body.token || !req.body.password) {
+  //   throw new ServerError(400, "token and password is required");
+  // }
 
   const user = await prisma.user.findFirst({
     where: {
@@ -182,37 +186,45 @@ const resetPassword = async (req, res, next) => {
   });
 
   if (!user) {
-    throw new ServerError(404, "user is not found");
+    throw new ServerError(404, "Invalid link or token");
   }
 
   // 3. check for token expiry
 
   if (new Date(user.tokenExpiry) < new Date()) {
-    throw new ServerError(404, "token expired");
+    throw new ServerError(404, "Link expired");
   }
   // 4. check if is accountVerified
 
-  if (!user.accountVerified) {
-    throw new ServerError(404, "verify you account first");
+  if (user.accountVerified && !req.body.password) {
+    throw new ServerError(401, "password must be supplied");
   }
 
   // 5. if account verified extract password from req.body
   // 6. hash password
 
-  const hasedPassword = await bcrypt.hash(req.body.password, 10);
-  // 7. update user password in DB
-  await prisma.user.updateMany({
-    where: {
-      resetToken: req.body.token,
-    },
-    data: {
-      password: hasedPassword,
-      resetToken: null,
-      tokenExpiry: null,
-    },
-  });
-  // 8. send email password reset successful
-  res.json({ msg: "reset password successul" });
+  if (user.accountVerified) {
+    const hashedPass = await bcrypt.hash(req.body.password, 10);
+    await prisma.user.updateMany({
+      where: { id: user.id },
+      data: {
+        password: hashedPass,
+        resetToken: null,
+        tokenExpiry: null,
+      },
+    });
+    res.json({ msg: "reset password successful" });
+  } else {
+    await prisma.user.updateMany({
+      where: { id: user.id },
+      data: {
+        accountVerified: true,
+        resetToken: null,
+        tokenExpiry: null,
+      },
+    });
+    res.json({ msg: "Account verification successful" });
+  }
 };
 
 const getMe = async (req, res, next) => {
