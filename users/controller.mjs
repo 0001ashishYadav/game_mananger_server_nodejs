@@ -242,7 +242,8 @@ const getMe = async (req, res, next) => {
 };
 
 const updateProfileImage = async (req, res, next) => {
-  res.json({ msg: "update profile image" });
+  console.log(req.file);
+  res.json({ msg: "oiuyjthgr" });
 };
 
 export {
