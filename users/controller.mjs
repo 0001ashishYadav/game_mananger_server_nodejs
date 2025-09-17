@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import prisma from "../prisma/db.mjs";
+import prisma, { DB_ERR_CODES, Prisma } from "../prisma/db.mjs";
 import { ServerError } from "../error.mjs";
 import { UserLoginModel, UserSignupModel } from "./validation .mjs";
 import sendEmail from "./email.mjs";
@@ -23,34 +23,54 @@ const signup = async (req, res, next) => {
 
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes later
 
-  const newUser = await prisma.user.create({
-    data: {
-      email: req.body.email,
-      name: req.body.name,
-      password: hasedPassword,
-      resetToken: randomString,
-      tokenExpiry: expiresAt,
-    },
-  });
-  console.log(newUser);
+  try {
+    const newUser = await prisma.user.create({
+      data: {
+        email: req.body.email,
+        name: req.body.name,
+        password: hasedPassword,
+        resetToken: randomString,
+        tokenExpiry: expiresAt,
+      },
+    });
+    console.log(newUser);
 
-  // 4. make link example http://localhost:5000/resetPassword/fgvjkdsuhvgyahfvajdsfahvdsjvbd
+    // 4. make link example http://localhost:5000/resetPassword/fgvjkdsuhvgyahfvajdsfahvdsjvbd
 
-  const resetLink = `http://localhost:5000/resetPassword/${randomString}`;
+    const resetLink = `http://localhost:5000/resetPassword/${randomString}`;
 
-  // 5. add this above link email replacing http://google.com
+    // 5. add this above link email replacing http://google.com
 
-  await emailQueue.add("send_verification_email", {
-    to: newUser.email,
-    subject: "Verification Email",
-    body: `<html>
+    await emailQueue.add("send_verification_email", {
+      to: newUser.email,
+      subject: "Verification Email",
+      body: `<html>
     <h1>welcome to Game</h1>
     <a href="${resetLink}"'>Click here</a>
     </html>`,
-  });
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === DB_ERR_CODES.UNIQUE_ERR) {
+        throw new ServerError(401, "User with this email already exists.");
+      }
+    }
+    throw err;
+  }
 
   // sendEmail(newUser.email, "Verification Email");
   console.log(req.body);
+
+  // IN FUTURE Implement something like this
+  // const user = await catchDBError(await prisma.user.create({
+  //   data: {
+  //     email: req.body.email,
+  //     name: req.body.name,
+  //     password: hasedPassword,
+  //     resetToken: randomStr,
+  //     tokenExpiry: futureExpiryTime
+  //   },
+  // }))
 
   res.json({ msg: "signup is successful" });
 };
@@ -202,4 +222,15 @@ const getMe = async (req, res, next) => {
   res.json({ msg: "This is me" });
 };
 
-export { signup, login, forgotPassword, resetPassword, getMe };
+const updateProfileImage = async (req, res, next) => {
+  res.json({ msg: "update profile image" });
+};
+
+export {
+  signup,
+  login,
+  forgotPassword,
+  resetPassword,
+  getMe,
+  updateProfileImage,
+};
