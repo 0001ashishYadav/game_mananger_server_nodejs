@@ -6,6 +6,7 @@ import sendEmail from "./email.mjs";
 import emailQueue from "../queue/email.queue.mjs";
 import { asyncJwtSign } from "../async.jwt.mjs";
 import randomStrGen from "../tools/randomStrGen.mjs";
+import { uploadImage } from "../storege/storage.mjs";
 
 const signup = async (req, res, next) => {
   const result = await UserSignupModel.safeParseAsync(req.body);
@@ -109,7 +110,14 @@ const login = async (req, res, next) => {
     { expiresIn: process.env.TOKEN_EXPIRY_TIME }
   );
 
-  res.json({ msg: "login successful", token });
+  res.json({
+    msg: "login successful",
+    token,
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    profilePhoto: user.profilePhoto,
+  });
 };
 
 const forgotPassword = async (req, res, next) => {
@@ -242,8 +250,19 @@ const getMe = async (req, res, next) => {
 };
 
 const updateProfileImage = async (req, res, next) => {
-  console.log(req.file);
-  res.json({ msg: "oiuyjthgr" });
+  // TODO: check if already image uploaded
+  // find user from DB
+  // Delete image from cloudnary
+  const result = await uploadImage(req.file, "profiles", true);
+  console.log(result);
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: {
+      profilePhoto: result.secure_url,
+    },
+  });
+
+  res.json({ msg: "image uploaded successfully" });
 };
 
 export {
