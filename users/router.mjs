@@ -3,6 +3,7 @@ import { authentication } from "../auth.mjs";
 import { singleImageUploadMiddleware } from "../storege/config.mjs";
 const userRouter = express.Router();
 import {
+  deleteProfileImage,
   forgotPassword,
   getMe,
   login,
@@ -22,6 +23,7 @@ userRouter
     authentication,
     singleImageUploadMiddleware("image"),
     updateProfileImage
-  );
+  )
+  .delete("/profile/image/delete", authentication, deleteProfileImage);
 
 export default userRouter;

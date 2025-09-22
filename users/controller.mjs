@@ -7,7 +7,6 @@ import emailQueue from "../queue/email.queue.mjs";
 import { asyncJwtSign } from "../async.jwt.mjs";
 import randomStrGen from "../tools/randomStrGen.mjs";
 import { deleteImage, uploadImage } from "../storege/storage.mjs";
-import cloudinary from "../storege/cloudinary.mjs";
 
 const signup = async (req, res, next) => {
   const result = await UserSignupModel.safeParseAsync(req.body);
@@ -281,6 +280,41 @@ const updateProfileImage = async (req, res, next) => {
   res.json({ msg: "image uploaded successfully" });
 };
 
+const deleteProfileImage = async (req, res, next) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: req.user.id,
+    },
+  });
+
+  console.log(user);
+
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: {
+      profilePhoto: null,
+    },
+  });
+
+  function extractPublicId(url) {
+    // remove query params if any
+    const cleanUrl = url.split("?")[0];
+    // remove version part (/v123456789/)
+    const withoutVersion = cleanUrl.replace(/\/v\d+\//, "/");
+    // get everything after `upload/`
+    const parts = withoutVersion.split("/upload/");
+    return parts[1].replace(/\.[^.]+$/, ""); // remove extension
+  }
+
+  const publicId = extractPublicId(user.profilePhoto);
+
+  const result = await deleteImage(publicId);
+
+  console.log("result", result);
+
+  res.json({ msg: `image deleted ${result.result}` });
+};
+
 export {
   signup,
   login,
@@ -288,4 +322,5 @@ export {
   resetPassword,
   getMe,
   updateProfileImage,
+  deleteProfileImage,
 };

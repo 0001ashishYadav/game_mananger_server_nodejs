@@ -2,7 +2,7 @@ import multer from "multer";
 import { ServerError } from "../error.mjs";
 
 const uploadConfig = {
-  maxFileSize: 2 * 1024 * 1024,
+  maxFileSize: 5 * 1024 * 1024,
   allowedMimeTypes: ["image/jpeg", "image/png"],
   allowedExtensions: [".jpg", ".jpeg", ".png"],
   destination: "./uploads/",
