@@ -6,7 +6,8 @@ import sendEmail from "./email.mjs";
 import emailQueue from "../queue/email.queue.mjs";
 import { asyncJwtSign } from "../async.jwt.mjs";
 import randomStrGen from "../tools/randomStrGen.mjs";
-import { uploadImage } from "../storege/storage.mjs";
+import { deleteImage, uploadImage } from "../storege/storage.mjs";
+import cloudinary from "../storege/cloudinary.mjs";
 
 const signup = async (req, res, next) => {
   const result = await UserSignupModel.safeParseAsync(req.body);
@@ -250,11 +251,26 @@ const getMe = async (req, res, next) => {
 };
 
 const updateProfileImage = async (req, res, next) => {
-  // TODO: check if already image uploaded
-  // find user from DB
-  // Delete image from cloudnary
-  const result = await uploadImage(req.file, "profiles", true);
-  console.log(result);
+  const user = await prisma.user.findUnique({
+    where: {
+      id: req.user.id,
+    },
+  });
+  let result;
+  if (!user.profilePhoto) {
+    // Delete image from cloudnary
+    const fileName = `${randomStrGen(32)}`;
+    // upload to cloud storage
+    result = await uploadImage(req.file.buffer, fileName, "profiles", true);
+    // update file url in DB
+  } else {
+    const splittedUrl = user.profilePhoto.split("/");
+
+    const fileNameWithExt = splittedUrl[splittedUrl.length - 1];
+    const fileName = fileNameWithExt.split(".")[0];
+    result = await uploadImage(req.file.buffer, fileName, "profiles", true);
+  }
+
   await prisma.user.update({
     where: { id: req.user.id },
     data: {
