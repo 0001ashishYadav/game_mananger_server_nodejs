@@ -1,11 +1,20 @@
 -- CreateEnum
 CREATE TYPE "public"."Status" AS ENUM ('WAITING', 'PLAYING', 'LEFT', 'FINISHED');
 
--- AlterTable
-ALTER TABLE "public"."User" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN     "profilePhoto" TEXT,
-ADD COLUMN     "resetToken" TEXT,
-ADD COLUMN     "tokenExpiry" TIMESTAMP(3);
+-- CreateTable
+CREATE TABLE "public"."User" (
+    "id" SERIAL NOT NULL,
+    "email" TEXT NOT NULL,
+    "name" TEXT,
+    "password" TEXT NOT NULL,
+    "accountVerified" BOOLEAN NOT NULL DEFAULT false,
+    "resetToken" TEXT,
+    "tokenExpiry" TIMESTAMP(3),
+    "profilePhoto" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "public"."Game" (
@@ -36,6 +45,10 @@ CREATE TABLE "public"."GameSession" (
     "gameID" INTEGER NOT NULL,
     "status" "public"."Status" NOT NULL DEFAULT 'WAITING',
     "winner" TEXT,
+    "GameUrl" TEXT,
+    "ProcessID" INTEGER,
+    "CreatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "StartedAt" TIMESTAMP(3),
 
     CONSTRAINT "GameSession_pkey" PRIMARY KEY ("id")
 );
@@ -50,7 +63,13 @@ CREATE TABLE "public"."GameSessionPlayer" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "public"."User"("email");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "PlayerGameProfile_gameID_playerID_key" ON "public"."PlayerGameProfile"("gameID", "playerID");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "GameSessionPlayer_sessionID_playerID_key" ON "public"."GameSessionPlayer"("sessionID", "playerID");
 
 -- AddForeignKey
 ALTER TABLE "public"."PlayerGameProfile" ADD CONSTRAINT "PlayerGameProfile_gameID_fkey" FOREIGN KEY ("gameID") REFERENCES "public"."Game"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
