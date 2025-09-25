@@ -1,5 +1,5 @@
 import { ServerError } from "../error.mjs";
-import { prisma } from "../prisma/db.mjs";
+import { DB_ERR_CODES, prisma } from "../prisma/db.mjs";
 
 const addGame = async (req, res, next) => {
   // TODO: add validation
@@ -19,11 +19,13 @@ const listGame = async (req, res, next) => {
   res.json({ msg: "successful", games });
 };
 
+let gameSession;
+
 const requestGame = async (req, res, next) => {
   if (!req.body.gameID) {
     throw new ServerError(400, "game id must be supplied");
   }
-  let gameSession = await prisma.gameSession.findFirst({
+  gameSession = await prisma.gameSession.findFirst({
     where: {
       gameID: req.body.gameID,
       status: "WAITING",
@@ -43,6 +45,17 @@ const requestGame = async (req, res, next) => {
         playerID: req.user.id,
       },
     });
+
+    // check if the game session is full
+
+    console.log(gameSession.id);
+
+    const totalUserInSession = await prisma.gameSessionPlayer.count({
+      where: {
+        sessionID: gameSession.id,
+      },
+    });
+    console.log(`total users: ${totalUserInSession}`);
 
     res.json({
       msg: "successful",
