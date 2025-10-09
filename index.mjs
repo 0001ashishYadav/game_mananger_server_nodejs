@@ -1,6 +1,7 @@
 import "dotenv/config";
 
 import express from "express";
+import cors from "cors";
 import { errorHandler } from "./error.mjs";
 import userRouter from "./users/router.mjs";
 import gameRouter from "./game/router.mjs";
@@ -8,6 +9,15 @@ import sessionRouter from "./session/router.mjs";
 const app = express();
 
 const PORT = process.env.PORT || 5000;
+
+// ✅ Enable CORS for frontend origin
+app.use(
+  cors({
+    origin: "http://localhost:5173", // allow your frontend URL
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true, // if using cookies or auth headers
+  })
+);
 
 app.use(express.json());
 
