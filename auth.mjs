@@ -29,4 +29,13 @@ const authentication = async (req, res, next) => {
   next();
 };
 
+const authorization = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      throw new ServerError(403, "user not allowed to access this resource");
+    }
+    next();
+  };
+};
+
 export { authentication };

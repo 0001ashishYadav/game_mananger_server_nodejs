@@ -1,5 +1,6 @@
 import { ServerError } from "../error.mjs";
 import { DB_ERR_CODES, prisma } from "../prisma/db.mjs";
+import { spawn } from "node:child_process";
 
 const addGame = async (req, res, next) => {
   // TODO: add validation
@@ -19,13 +20,11 @@ const listGame = async (req, res, next) => {
   res.json({ msg: "successful", games });
 };
 
-let gameSession;
-
 const requestGame = async (req, res, next) => {
   if (!req.body.gameID) {
     throw new ServerError(400, "game id must be supplied");
   }
-  gameSession = await prisma.gameSession.findFirst({
+  let gameSession = await prisma.gameSession.findFirst({
     where: {
       gameID: req.body.gameID,
       status: "WAITING",
@@ -38,30 +37,13 @@ const requestGame = async (req, res, next) => {
       },
     });
   }
+  let gameSessionPlayer;
   try {
-    const gameSessionPlayer = await prisma.gameSessionPlayer.create({
+    gameSessionPlayer = await prisma.gameSessionPlayer.create({
       data: {
         sessionID: gameSession.id,
         playerID: req.user.id,
       },
-    });
-
-    // check if the game session is full
-
-    console.log(gameSession.id);
-
-    const totalUserInSession = await prisma.gameSessionPlayer.count({
-      where: {
-        sessionID: gameSession.id,
-      },
-    });
-    console.log(`total users: ${totalUserInSession}`);
-
-    res.json({
-      msg: "successful",
-      gameID: req.body.gameID,
-      gameSession,
-      gameSessionPlayer,
     });
   } catch (err) {
     if (err.code === DB_ERR_CODES.UNIQUE_ERR) {
@@ -72,6 +54,58 @@ const requestGame = async (req, res, next) => {
     }
     throw err;
   }
+
+  const game = await prisma.game.findUnique({
+    where: {
+      id: req.body.gameID,
+    },
+  });
+  // find total number of players in this game session
+  const data = await prisma.gameSessionPlayer.aggregate({
+    where: {
+      sessionID: gameSession.id,
+    },
+    _count: {
+      playerID: true,
+    },
+  });
+
+  if (game.maxPlayer > data._count.playerID) {
+    return res.json({
+      msg: "successful, Wait for other players to join",
+      gameID: req.body.gameID,
+      gameSession,
+      gameSessionPlayer,
+      data,
+    });
+  }
+
+  console.log("game start");
+  const pid = await startGame();
+
+  res.json({
+    msg: "successful",
+    gameID: req.body.gameID,
+    gameSession,
+    gameSessionPlayer,
+    data,
+    pid,
+  });
+};
+
+const startGame = async () => {
+  // start game
+  const gameInstance = spawn(
+    "node",
+    ["C:/Users/ashis/Desktop/Game/mainServer/allGame/snake/index.mjs", 8080],
+    {
+      detached: true,
+      stdio: "ignore",
+    }
+  );
+  gameInstance.unref();
+  console.log(gameInstance);
+  return { pid: gameInstance.pid };
 };
 
 export { addGame, listGame, requestGame };
