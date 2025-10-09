@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.js"></script>
+  </head>
+
+  <body>
+    <div style="display: flex; justify-content: center; align-items: center">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+    <div style="display: flex; justify-content: center; margin-top: 10px">
+      <button id="play" style="padding: 10px 12px">Play</button>
+    </div>
+  </body>
+
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+
+    #play {
+      background-color: #edad92;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+  <script src="./app.js"></script>
+</html>
