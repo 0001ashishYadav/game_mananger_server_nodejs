@@ -1,7 +1,11 @@
 import bcrypt from "bcrypt";
 import { prisma, DB_ERR_CODES, Prisma } from "../prisma/db.mjs";
 import { ServerError } from "../error.mjs";
-import { UserLoginModel, UserSignupModel } from "./validation .mjs";
+import {
+  errorPritify,
+  UserLoginModel,
+  UserSignupModel,
+} from "./validation .mjs";
 import sendEmail from "./email.mjs";
 import emailQueue from "../queue/email.queue.mjs";
 import { asyncJwtSign } from "../async.jwt.mjs";
@@ -30,6 +34,8 @@ const signup = async (req, res, next) => {
         email: req.body.email,
         name: req.body.name,
         password: hasedPassword,
+        profilePhoto: req.body.profileImage,
+        accountVerified: false,
         resetToken: randomString,
         tokenExpiry: expiresAt,
       },
